@@ -1,0 +1,32 @@
+{
+  "version": "0.1.0",
+  "name": "metalsmith-doctoc-jsdom",
+  "description": "A metalsmith-doctoc plugin based on cheerio.",
+  "homepage": "https://github.com/rehierl/metalsmith-doctoc-cheerio",
+  "keywords": [
+    "metalsmith",
+    "frontmatter",
+    "doctoc",
+    "table-of-contents",
+    "toc"
+  ],
+  "author": "Reinhardt Hierl",
+  "license": "MIT",
+  "main": "src/index.js",
+  "bugs": {
+    "url": "https://github.com/rehierl/metalsmith-doctoc-cheerio/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rehierl/metalsmith-doctoc-cheerio.git"
+  },
+  "peerDependencies": {
+    "metalsmith": ">=1.0.0",
+    "metalsmith-doctoc": ">=0.2.0"
+  },
+  "dependencies": {
+    "is": ">=3.2.1",
+    "slug": ">=0.9.1",
+    "cheerio": ">=0.22.0"
+  }
+}
