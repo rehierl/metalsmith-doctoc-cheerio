@@ -28,7 +28,7 @@ This plugin will accept the following option properties:
 
 ```js
 Options {
-  //- these are htmlparser2 options:
+  //- these are htmlparser2 specific options:
   //  https://github.com/fb55/htmlparser2/wiki/Parser-options
   //- cheerio will pass this options object on to its
   //  underlying htmlparser2 instance.
@@ -123,7 +123,11 @@ Options {
   //  i.e. '$newId=$id-$counter'. redo the test with the new
   //  value. if $newId still isn't unique, increment the
   //  counter and repeat the procedure.
-  makeIdsUnique: false
+  makeIdsUnique: false,
+
+  //- set true to always update file.contents;
+  //  even if no new id was generated
+  alwaysUpdate: false
 }
 ```
 

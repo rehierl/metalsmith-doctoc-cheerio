@@ -351,4 +351,15 @@ function validateOptions(options) {
       ));
     }
   }
+  
+  key = "alwaysUpdate";
+  if(options.hasOwnProperty(key)) {
+    value = options[key];
+    if(!is.bool(value)) {
+      throw new Error(util.format(
+        "options.%s: [%s] is not a boolean value",
+        key, value
+      ));
+    }
+  }
 }
