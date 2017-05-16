@@ -1,5 +1,5 @@
 {
-  "version": "0.0.1",
+  "version": "0.0.2",
   "name": "metalsmith-doctoc-cheerio",
   "description": "A metalsmith-doctoc plugin based on cheerio.",
   "homepage": "https://github.com/rehierl/metalsmith-doctoc-cheerio",
