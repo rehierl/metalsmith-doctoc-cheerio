@@ -14,7 +14,30 @@ function Options() {
     return new Options();
   }
   
-  //- $range = 'hN-M'
+  //- these are htmlparser2 options:
+  //  https://github.com/fb55/htmlparser2/wiki/Parser-options
+  //- cheerio will pass this options object on to its
+  //  underlying htmlparser2 instance.
+  this.htmlparser2 = {
+    //- enable to give <script> and <style> special treatment
+    xmlMode: false,
+    //- enable to decode entities within the document
+    decodeEntities: false,
+    //- enable to lowercase all tags if xmlMode is disabled
+    //- if false, lowercase tags will remain lowercase,
+    //  but uppercase attribute names will be lowercased!
+    lowerCaseTags: false,
+    //- enable to recognize CDATA sections as text,
+    //  even if xmlMode is disabled
+    //- implicitly enabled if xmlMode is true
+    recognizeCDATA: false,
+    //- enable to trigger the onclosetag event
+    //  if xmlMode is disabled
+    //- implicitly enabled if xmlMode is true
+    recognizeSelfClosing: false
+  };
+  
+  //- $range = /h[1-6]-[1-6]/i
   //- with N and M in [1,6] and (N <= M)
   //- N will replace hMin and M will replace hMax
   //this.hRange = 'h1-6';
@@ -33,13 +56,20 @@ function Options() {
   //- ignore all tags, if (hMin > hMax)
   //this.hMax = 6;
   
-  //- $selector = /h[1-6](,\s*h[1-6])*/
+  //- $selector = /h[1-6](,\s*h[1-6])*/i
   //- a heading will only be taken into account, if it's tag
   //  can be found inside hSelector
   //- if hRange is given, it will override hMin and hMax
   //- if hMin or hMax are given, they will override hSelector
   //- hSelector is what will be used to find the heading tags
   this.hSelector = 'h1, h2, h3, h4, h5, h6';
+  
+  //- use this value to specify a cheerio context in which to
+  //  look for heading tags.
+  //- e.g. use '*' to search the whole document
+  //- e.g. use '#id' to only search the element marked with the
+  //  specified id value.
+  this.hContext = '*';
   
   //- string function(string)
   //- this function will be used to calculate a missing id:
@@ -77,6 +107,10 @@ function Options() {
   //  value. if $newId still isn't unique, increment the
   //  counter and repeat the procedure.
   this.makeIdsUnique = false;
+  
+  //- set true to always update file.contents;
+  //  even if no new id was generated
+  this.alwaysUpdate = false;
 }
 
 //========//========//========//========//========//========//========//========
@@ -163,7 +197,8 @@ function readSelector(selector) {
 
 //========//========//========//========//========//========//========//========
 
-//- e.g. options = { hRange: "h1-6" }
+//- options: { hRange: "h1-6" }
+//  => { hMin: 1, hMax: 6 }
 function removeRange(options) {
   if(!options.hasOwnProperty("hRange")) {
     return;//- there is nothing to do
@@ -186,7 +221,8 @@ function removeRange(options) {
 
 //========//========//========//========//========//========//========//========
 
-//- e.g. options = { hMin: 1, hMax: 6 }
+//- options: { hMin: 1, hMax: 6 }
+//  => { hSelector: "h1, H1, ... h6, H6" }
 function removeMinMax(options) {
   const hMinExists = options.hasOwnProperty("hMin");
   const hMaxExists = options.hasOwnProperty("hMax");
@@ -226,6 +262,8 @@ function removeMinMax(options) {
   
   for(let ix=min; ix<=max; ix++) {
     selector.push(util.format("h%s", ix));
+    //- tag filtering is case-sensitive!
+    selector.push(util.format("H%s", ix));
   }
   
   options.hSelector = selector.join(", ");
@@ -239,12 +277,33 @@ function validateOptions(options) {
   let key = undefined;
   let value = undefined;
   
+  key = "htmlparser2";
+  if(options.hasOwnProperty(key)) {
+    value = options[key];
+    if(!is.object(value)) {
+      throw new Error(util.format( 
+        "options.%s: must be an options object", key
+      ));
+    }
+  }
+  
   key = "hSelector";
   if(options.hasOwnProperty(key)) {
     value = options[key];
     if(!readSelector(value)) {
       throw new Error(util.format( 
         "options.%s: [%s] is not a valid selector string",
+        key, value
+      ));
+    }
+  }
+
+  key = "hContext";
+  if(options.hasOwnProperty(key)) {
+    value = options[key];
+    if(!is.string(value) || (value.trim().length === 0)) {
+      throw new Error(util.format(
+        "options.%s: [%s] must be a non-empty string",
         key, value
       ));
     }
@@ -265,7 +324,7 @@ function validateOptions(options) {
     value = options[key];
     if(!is.string(value)) {
       throw new Error(util.format(
-        "options.%s: [%s] is not a non-empty string",
+        "options.%s: [%s] is not a string value",
         key, value
       ));
     }
@@ -277,6 +336,17 @@ function validateOptions(options) {
     if(!is.integer(value) || is.infinite(value) || (value <= 0)) {
       throw new Error(util.format(
         "options.%s: [%s] is not a valid integer value",
+        key, value
+      ));
+    }
+  }
+  
+  key = "makeIdsUnique";
+  if(options.hasOwnProperty(key)) {
+    value = options[key];
+    if(!is.bool(value)) {
+      throw new Error(util.format(
+        "options.%s: [%s] is not a boolean value",
         key, value
       ));
     }

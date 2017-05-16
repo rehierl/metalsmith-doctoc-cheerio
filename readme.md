@@ -5,15 +5,16 @@ metalsmith-doctoc-cheerio
 This metalsmith-doctoc
 ([npmjs](https://www.npmjs.com/package/metalsmith-doctoc),
 [github](https://github.com/rehierl/metalsmith-doctoc))
-plugin will use jsdom
-([npmjs](https://www.npmjs.com/package/jsdom),
-[github](https://github.com/tmpvar/jsdom))
+plugin will use cheerio
+([npmjs](https://www.npmjs.com/package/cheerio),
+[github](https://github.com/cheeriojs/cheerio))
 to read the heading tags from any HTML content. It will process fully specified
 HTML documents, or a mere tag soup (e.g. no html, head or body tags).
 
-## TODO
-
-- add support for cheerio-specific options?
+Cheerio itself will use htmlparser2
+([npmjs](https://www.npmjs.com/package/htmlparser2),
+[github](https://github.com/fb55/htmlparser2/))
+to read HTML/XML content.
 
 ## Installation
 
@@ -27,6 +28,29 @@ This plugin will accept the following option properties:
 
 ```js
 Options {
+  //- these are htmlparser2 options:
+  //  https://github.com/fb55/htmlparser2/wiki/Parser-options
+  //- cheerio will pass this options object on to its
+  //  underlying htmlparser2 instance.
+  htmlparser2: {
+    //- enable to give <script> and <style> special treatment
+    xmlMode: false,
+    //- enable to decode entities within the document
+    decodeEntities: false,
+    //- enable to lowercase all tags if xmlMode is disabled
+    //- if false, lowercase tags will remain lowercase,
+    //  but uppercase attribute names will be lowercased!
+    lowerCaseTags: false,
+    //- enable to recognize CDATA sections as text,
+    //  even if xmlMode is disabled
+    //- implicitly enabled if xmlMode is true
+    recognizeCDATA: false,
+    //- enable to trigger the onclosetag event
+    //  if xmlMode is disabled
+    //- implicitly enabled if xmlMode is true
+    recognizeSelfClosing: false
+  }
+  
   //- $range = 'h$min-$max'
   //- with $min and $max in [1,6] and ($min <= $max)
   //- $min will replace hMin and $max will replace hMax
@@ -55,6 +79,13 @@ Options {
   //- if hMin or hMax are given, they will override hSelector
   //- hSelector is what will be used to find the heading tags
   hSelector: 'h1, h2, h3, h4, h5, h6',
+  
+  //- use this value to specify a cheerio context in which to
+  //  look for heading tags.
+  //- e.g. use '*' to search the whole document
+  //- e.g. use '#id' to only search the element marked with the
+  //  specified id value.
+  hContext: '*',
   
   //- string function(string)
   //- this function will be used to calculate a missing id:
@@ -99,6 +130,11 @@ Options {
 Note that if a hRange value is given, it will override hMin, hMax and hSelector.
 And if hRange is omitted, but hMin and/or hMax are given, they will override
 hSelector. So only one of those (hRange, hMin/hMax or hSelector) should be used.
+
+Note that tag selection via hSelector is case-sensitive! If a document contains
+h2 and H2 tags, then hSelector must reflect this, or some headings will be
+ignored. If a hSelector is generated (from hRange, hMin, hMax), it will contain
+lowercase and uppercase tags.
 
 ### Range/Selector for options
 

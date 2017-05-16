@@ -1,6 +1,6 @@
 {
-  "version": "0.1.0",
-  "name": "metalsmith-doctoc-jsdom",
+  "version": "0.0.1",
+  "name": "metalsmith-doctoc-cheerio",
   "description": "A metalsmith-doctoc plugin based on cheerio.",
   "homepage": "https://github.com/rehierl/metalsmith-doctoc-cheerio",
   "keywords": [

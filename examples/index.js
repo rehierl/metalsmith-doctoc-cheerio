@@ -63,7 +63,7 @@ msi
   doctocFlag: "doctoc",
   
   plugins: {
-    jsdom: {
+    cheerio: {
       plugin: plugin,
       options: {
         hRange: "h1-6",
@@ -76,7 +76,7 @@ msi
     }
   },
   
-  "default": "jsdom",
+  "default": "cheerio",
   //enableRequire: false,
   //resolveFunc: require,
   doctocTree: "doctoc"

@@ -95,7 +95,6 @@ function readContents(context) {
   const api = context.api;
   const contents = context.contents;
   const options = context.options;
-  const selector = options.hSelector;
   
   const idgen = api.getIdGenerator({
     slugFunc: options.slugFunc,
@@ -103,44 +102,32 @@ function readContents(context) {
     idLengthLimit: options.idLengthLimit
   });
   
-  const dom = new JSDOM(contents, {
-    //- must be enabled to use dom.nodeLocation()
-    includeNodeLocations: true });
-  const doc = dom.window.document;
-  
-  //- determine if contents is a fully specified html document
-  //  with <html>, <head> and <body> tags, or just some tag soup.
-  const isTagSoup = (dom.nodeLocation(doc.body) === null);
-  
-  //- querySelectorAll() will return a NodeList
-  //- in this case a list of HTMLHeadingElement's
-  const elements = doc.querySelectorAll(selector);
+  const $ = cheerio.load(contents, options.htmlparser2);
   
   const headings = [];
   let newIdsCount = 0;
   
-  for(let ix=0, ic=elements.length; ix<ic; ix++) {
-    const header = elements[ix];
-    const title = header.textContent;
-    let id = undefined;
+  const hSelector = options.hSelector;
+  const hContext = options.hContext;
+  
+  $(hSelector, $(hContext)).each(function(index, element) {
+    const title = $(element).text();
+    let id = $(element).attr("id");
     
-    if(header.hasAttribute("id")) {
-      //- assume that this id value is unique
-      id = header.getAttribute("id");
-    } else {
+    if(id === undefined) {
       id = idgen.nextId(title);
       
       if(options.makeIdsUnique === true) {
-        while(doc.querySelector("#" + id) !== null) {
+        while($("*").is("#" + id)) {
           id = idgen.nextId();
         }
       }
       
-      header.setAttribute("id", id);
+      $(element).attr("id", id);
       newIdsCount++;
     }
     
-    const tag = header.tagName;
+    const tag = element.tagName;
     const level = Number.parseInt(tag.substring(1));
     
     headings.push({
@@ -149,16 +136,13 @@ function readContents(context) {
       title: title,
       id: id
     });
-  }//- for
+  });
   
-  if(newIdsCount <= 0) {
+  if((options.alwaysUpdate !== true)
+  && (newIdsCount <= 0)) {
     delete context.contents;
   } else {
-    if(isTagSoup === true) {
-      context.contents = doc.body.innerHTML;
-    } else {
-      context.contents = dom.serialize();
-    }
+    context.contents = $.html();
   }
   
   return api.createTreeFromHeadings(headings);
